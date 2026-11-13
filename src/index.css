@@ -1152,3 +1152,76 @@ body { transition: background-color 0.3s ease, color 0.3s ease; }
   .site-nav { animation: none; }
   .site-nav-indicator.ready { transition: none; }
 }
+
+
+/* ========== DOTTED BACKGROUND ========== */
+:root {
+  --dot: rgba(0, 0, 0, 0.16);
+  --dot-glow: rgba(0, 0, 0, 0.55);
+}
+[data-theme="dark"] {
+  --dot: rgba(255, 255, 255, 0.17);
+  --dot-glow: rgba(255, 255, 255, 0.7);
+}
+
+.dot-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  --px: 50%;
+  --py: 30%;
+  animation: dotsIn 1.4s ease both;
+}
+
+.dot-bg-base,
+.dot-bg-glow {
+  position: absolute;
+  inset: 0;
+  background-size: 36px 36px;
+  animation: dotsDrift 70s linear infinite;
+}
+
+/* Mga tuldok na nakalatag, mas malinaw sa gitna at dahan-dahang kumukupas sa gilid */
+.dot-bg-base {
+  background-image: radial-gradient(circle, var(--dot) 1.8px, transparent 2.3px);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 25%, rgba(0, 0, 0, 0.35) 100%);
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 25%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+/* Mga tuldok na lumiliwanag sa paligid ng mouse */
+.dot-bg-glow {
+  background-image: radial-gradient(circle, var(--dot-glow) 2.2px, transparent 2.7px);
+  -webkit-mask-image: radial-gradient(circle 190px at var(--px) var(--py), #000 0%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--px) var(--py), #000 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.dot-bg.is-active .dot-bg-glow { opacity: 1; }
+
+@keyframes dotsIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dotsDrift {
+  from { background-position: 0 0; }
+  to { background-position: 36px 36px; }
+}
+
+/* Phone / touch: walang mouse, kaya walang glow */
+@media (hover: none) {
+  .dot-bg-glow { display: none; }
+}
+@media (max-width: 600px) {
+  .dot-bg-base,
+  .dot-bg-glow { background-size: 28px 28px; }
+  @keyframes dotsDrift {
+    from { background-position: 0 0; }
+    to { background-position: 28px 28px; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-bg,
+  .dot-bg-base,
+  .dot-bg-glow { animation: none; }
+}

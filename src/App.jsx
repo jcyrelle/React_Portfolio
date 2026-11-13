@@ -1,5 +1,6 @@
 import useTheme from './hooks/useTheme.js';
 import FadeUp from './components/FadeUp.jsx';
+import DotBackground from './components/DotBackground.jsx';
 import ScrollProgress from './components/ScrollProgress.jsx';
 import SiteNav from './components/SiteNav.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
@@ -18,6 +19,7 @@ export default function App() {
 
   return (
     <>
+      <DotBackground />
       <ScrollProgress />
       <SiteNav />
       <ThemeToggle theme={theme} onToggle={toggleTheme} />
