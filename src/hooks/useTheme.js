@@ -37,10 +37,13 @@ export default function useTheme() {
     };
   }, []);
 
-  // Smooth na pagpalit ng theme: dahan-dahang nagfe-fade ang buong page.
-  // Kapag hindi suportado ng browser (o naka-"reduce motion"), instant na lang.
+  // Pagpalit ng theme na may transition:
+  // - Sa browser na may View Transitions: lumalaki ang bilog mula sa toggle button
+  //   hanggang matakpan ang buong page ng bagong theme.
+  // - Sa ibang browser: dahan-dahang nagbabago ang mga kulay (fade).
+  // - Kapag naka-"reduce motion" ang device: instant na lang.
   // Kapag manual na pinalitan ng bisita, hanggang sa susunod na pagpalit ng umaga/gabi iyon.
-  const toggleTheme = () => {
+  const toggleTheme = (event) => {
     const next = theme === 'light' ? 'dark' : 'light';
 
     const apply = () => {
@@ -52,11 +55,50 @@ export default function useTheme() {
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (typeof document.startViewTransition === 'function' && !reduceMotion) {
-      document.startViewTransition(apply);
-    } else {
+    if (reduceMotion) {
       setTheme(next);
+      return;
     }
+
+    if (typeof document.startViewTransition === 'function') {
+      // Saan nagsisimula ang bilog: sa gitna ng toggle button
+      const box =
+        event && event.currentTarget && event.currentTarget.getBoundingClientRect
+          ? event.currentTarget.getBoundingClientRect()
+          : null;
+      const x = box ? box.left + box.width / 2 : window.innerWidth - 50;
+      const y = box ? box.top + box.height / 2 : 35;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      const transition = document.startViewTransition(apply);
+      transition.ready
+        .then(() => {
+          document.documentElement.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${radius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 700,
+              easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+              pseudoElement: '::view-transition-new(root)',
+            }
+          );
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // Fallback: fade ng mga kulay
+    const root = document.documentElement;
+    root.classList.add('theme-fading');
+    setTheme(next);
+    setTimeout(() => root.classList.remove('theme-fading'), 700);
   };
 
   return { theme, toggleTheme };

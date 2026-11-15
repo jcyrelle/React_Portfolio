@@ -4,14 +4,14 @@ export default function ThemeToggle({ theme, onToggle }) {
       <div
         className="theme-toggle"
         id="themeToggle"
-        onClick={onToggle}
+        onClick={(e) => onToggle(e)}
         role="button"
         aria-label="Toggle dark mode"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onToggle();
+            onToggle(e);
           }
         }}
       >

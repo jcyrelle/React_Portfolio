@@ -1259,3 +1259,23 @@ body { transition: background-color 0.3s ease, color 0.3s ease; }
 /* ========== MAS MALIIT NA PUWANG SA PINAKABABA ========== */
 .portfolio-grid { padding-bottom: 1rem; }
 footer { padding: 1rem 1rem 1.75rem; }
+
+
+/* ========== TRANSITION NG LIGHT / DARK MODE ========== */
+/* Lumalaki ang bagong theme na parang bilog mula sa toggle button (ang galaw ay nasa useTheme.js) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* Fallback para sa browser na walang View Transitions: dahan-dahang nagbabago ang mga kulay */
+.theme-fading,
+.theme-fading *,
+.theme-fading *::before,
+.theme-fading *::after {
+  transition: background-color 0.6s ease, color 0.6s ease, border-color 0.6s ease,
+    fill 0.6s ease, box-shadow 0.6s ease !important;
+}
