@@ -1298,3 +1298,90 @@ footer { padding: 1rem 1rem 1.75rem; }
 @media (prefers-reduced-motion: reduce) {
   .hero-name .hero-word > span { transform: none !important; transition: none !important; }
 }
+
+
+/* ========== INTRO SCREEN ========== */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: var(--bg);
+  transition: opacity 0.8s ease, visibility 0s linear 0.8s;
+}
+.intro.leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Parehong tuldok ng background ng page */
+.intro::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--dot) 1.8px, transparent 2.3px);
+  background-size: 36px 36px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 10%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 10%, transparent 100%);
+  pointer-events: none;
+}
+
+.intro-mark {
+  position: relative;
+  display: flex;
+  gap: 0.04em;
+  font-size: clamp(4.5rem, 16vw, 8rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.intro.leaving .intro-mark { transform: scale(1.1); }
+
+.intro-letter {
+  display: inline-block;
+  overflow: hidden;
+}
+.intro-letter > span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: introUp 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: calc(0.2s + var(--i, 0) * 0.16s);
+}
+@keyframes introUp {
+  to { transform: translateY(0); }
+}
+
+.intro-line {
+  position: relative;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text);
+  animation: introLine 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.75s forwards;
+}
+@keyframes introLine {
+  to { width: min(180px, 40vw); }
+}
+
+.intro-name {
+  position: relative;
+  margin: 0;
+  padding-left: 0.32em; /* para sentro ang text kahit may letter-spacing */
+  font-size: 0.78rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  animation: introFade 0.8s ease 1.05s forwards;
+}
+@keyframes introFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
