@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { profile } from '../data/portfolio.js';
 
-const HOLD = 2100; // gaano katagal bago magsimulang kumupas (ms)
+const HOLD = 3600; // gaano katagal bago magsimulang kumupas (ms)
 const EXIT = 800; // tagal ng pagkupas (ms)
 export const INTRO_KEY = 'portfolio-intro-seen';
 
