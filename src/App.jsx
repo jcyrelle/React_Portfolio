@@ -12,6 +12,7 @@ import Projects from './components/Projects.jsx';
 import Experience from './components/Experience.jsx';
 import Certifications from './components/Certifications.jsx';
 import Contact from './components/Contact.jsx';
+import VisitorCounter from './components/VisitorCounter.jsx';
 import { profile } from './data/portfolio.js';
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
 
       <FadeUp as="footer" index={8}>
         © 2026 {profile.name}. All rights reserved.
+        <VisitorCounter />
       </FadeUp>
     </>
   );

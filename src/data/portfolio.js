@@ -175,3 +175,9 @@ export const socials = [
     link: 'https://www.facebook.com/share/1B76ug9bek/',
   },
 ];
+
+
+// Live visitor counter (Firebase Realtime Database).
+export const visitorCounter = {
+  databaseURL: 'https://portfolio-counter-fcd34-default-rtdb.asia-southeast1.firebasedatabase.app',
+};
