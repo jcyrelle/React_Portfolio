@@ -1255,3 +1255,7 @@ body { transition: background-color 0.3s ease, color 0.3s ease; }
 
 @media (prefers-reduced-motion: reduce) {
 }
+
+/* ========== MAS MALIIT NA PUWANG SA PINAKABABA ========== */
+.portfolio-grid { padding-bottom: 1rem; }
+footer { padding: 1rem 1rem 1.75rem; }
