@@ -1247,46 +1247,11 @@ body { transition: background-color 0.3s ease, color 0.3s ease; }
   color: var(--muted);
 }
 
-.visitor-dot {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-}
-.visitor-dot::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: visitorPulse 1.8s ease-out infinite;
-}
-
-.visitor-live {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.visitor-sep {
-  width: 1px;
-  height: 14px;
-  background: var(--border);
-}
-
 .visitor-num {
   font-weight: 600;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
-@keyframes visitorPulse {
-  from { transform: scale(1); opacity: 0.6; }
-  to { transform: scale(3); opacity: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .visitor-dot::after { animation: none; }
 }

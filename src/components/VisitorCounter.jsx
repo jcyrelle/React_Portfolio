@@ -102,12 +102,11 @@ export default function VisitorCounter() {
 
   return (
     <div className="visitor-wrap">
-      <div className="visitor-pill" title="Live visitor count">
-        <span className="visitor-dot" aria-hidden="true"></span>
-        <span className="visitor-live">Live</span>
-        <span className="visitor-sep" aria-hidden="true"></span>
+      <div className="visitor-pill">
+        <i className="fa-regular fa-eye" aria-hidden="true"></i>
+        <span className="visitor-label">Visited by</span>
         <span className="visitor-num">{(shown ?? count).toLocaleString()}</span>
-        <span className="visitor-label">visitors</span>
+        <span className="visitor-label">{count === 1 ? 'person' : 'people'}</span>
       </div>
     </div>
   );
