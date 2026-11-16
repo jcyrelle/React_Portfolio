@@ -1416,3 +1416,18 @@ footer { padding: 1rem 1rem 1.75rem; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
+
+/* ========== LARAWAN SA HERO: dahan-dahang lumulutang ========== */
+.profile-img {
+  animation: heroFloat 6s ease-in-out 1.4s infinite alternate;
+  will-change: transform;
+}
+
+@keyframes heroFloat {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(-9px) rotate(0.8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-img { animation: none; }
+}
