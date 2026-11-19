@@ -13,6 +13,7 @@ import TechStack from './components/TechStack.jsx';
 import Projects from './components/Projects.jsx';
 import Experience from './components/Experience.jsx';
 import Certifications from './components/Certifications.jsx';
+import GitHubActivity from './components/GitHubActivity.jsx';
 import Contact from './components/Contact.jsx';
 import VisitorCounter from './components/VisitorCounter.jsx';
 import { profile } from './data/portfolio.js';
@@ -60,10 +61,11 @@ export default function App() {
             <Projects index={4} />
             <Experience index={5} />
             <Certifications index={6} />
-            <Contact index={7} />
+            <GitHubActivity index={7} />
+            <Contact index={8} />
           </main>
 
-          <FadeUp as="footer" index={8}>
+          <FadeUp as="footer" index={9}>
             © 2026 {profile.name}. All rights reserved.
             <VisitorCounter />
           </FadeUp>

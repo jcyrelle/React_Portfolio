@@ -181,3 +181,7 @@ export const socials = [
 export const visitorCounter = {
   databaseURL: 'https://portfolio-counter-fcd34-default-rtdb.asia-southeast1.firebasedatabase.app',
 };
+// GitHub contributions graph. Palitan ang username kung ibang account ang gusto mong ipakita.
+export const githubActivity = {
+  username: 'jcyrelle',
+};
