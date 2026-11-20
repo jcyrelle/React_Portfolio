@@ -1416,7 +1416,6 @@ footer { padding: 1rem 1rem 1.75rem; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-
 /* ========== GITHUB CONTRIBUTIONS ========== */
 /* Nasa pagitan ng Certificates at Contact. Lumipat ang Contact sa ika-7 hanay. */
 @media (min-width: 901px) {
@@ -1431,39 +1430,61 @@ footer { padding: 1rem 1rem 1.75rem; }
 }
 
 .card-github { min-width: 0; } /* para hindi lumampas sa screen ang malapad na graph */
-.card-github h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.25rem; }
-.gh-user { color: var(--text); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.25s ease; }
-.gh-user:hover { border-color: var(--text); }
+.card-github h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem; }
+
+/* Mga kulay ng mga kahon (berde na parang sa GitHub). Palitan dito kung gusto ng ibang kulay. */
+:root {
+  --gh0: #ebedf0;
+  --gh1: #9be9a8;
+  --gh2: #40c463;
+  --gh3: #30a14e;
+  --gh4: #216e39;
+}
+[data-theme="dark"] {
+  --gh0: #1f1f1f;
+  --gh1: #0e4429;
+  --gh2: #006d32;
+  --gh3: #26a641;
+  --gh4: #39d353;
+}
 
 .gh-card {
   --cell: 12px;
-  --gap: 4px;
+  --gap: 3px;
   padding: 1.5rem;
 }
 
-/* Tatlong maliliit na stats sa itaas */
-.gh-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.4rem;
-}
-.gh-stat {
+/* Taas: icon, username, at link papunta sa profile */
+.gh-head {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.8rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
-.gh-stat-num {
-  font-size: 1.6rem;
+.gh-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
   color: var(--text);
+  text-decoration: none;
 }
-.gh-stat-label { font-size: 0.78rem; color: var(--muted); }
+.gh-profile i { font-size: 1.5rem; }
+.gh-open {
+  color: var(--muted);
+  font-size: 0.9rem;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+.gh-open:hover { color: var(--text); transform: translate(2px, -2px); }
+
+.gh-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+}
+.gh-main { flex: 1; min-width: 0; }
 
 /* Ang graph */
 .gh-wrap { display: flex; gap: 0.6rem; }
@@ -1474,7 +1495,7 @@ footer { padding: 1rem 1rem 1.75rem; }
   grid-template-rows: repeat(7, var(--cell));
   gap: var(--gap);
   padding-top: calc(1.2rem + var(--gap));
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: var(--cell);
   color: var(--muted);
 }
@@ -1491,7 +1512,7 @@ footer { padding: 1rem 1rem 1.75rem; }
   position: relative;
   height: 1.2rem;
   margin-bottom: var(--gap);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .gh-months span {
@@ -1514,26 +1535,25 @@ footer { padding: 1rem 1rem 1.75rem; }
   width: var(--cell);
   height: var(--cell);
   border-radius: 3px;
-  background: rgba(128, 128, 128, 0.16);
+  background: var(--gh0);
 }
 .gh-cell.empty { visibility: hidden; }
-
-/* Itim/puting kulay ayon sa theme, mas matingkad kapag mas marami ang contribution */
-.gh-cell.lv0 { background: rgba(128, 128, 128, 0.16); background: color-mix(in srgb, var(--text) 8%, transparent); }
-.gh-cell.lv1 { background: rgba(128, 128, 128, 0.4);  background: color-mix(in srgb, var(--text) 25%, transparent); }
-.gh-cell.lv2 { background: rgba(128, 128, 128, 0.6);  background: color-mix(in srgb, var(--text) 45%, transparent); }
-.gh-cell.lv3 { background: rgba(128, 128, 128, 0.8);  background: color-mix(in srgb, var(--text) 70%, transparent); }
-.gh-cell.lv4 { background: var(--text); }
-
-/* Paglabas: sunod-sunod na pop-in ng mga kahon, mula kaliwa pakanan */
-.gh-grid .gh-cell {
-  opacity: 0;
-  transform: scale(0.4);
-  transition: opacity 0.45s ease, transform 0.45s ease;
-  transition-delay: calc(var(--c, 0) * 14ms);
-}
-.gh-wrap.in-view .gh-grid .gh-cell { opacity: 1; transform: none; }
+.gh-cell.lv1 { background: var(--gh1); }
+.gh-cell.lv2 { background: var(--gh2); }
+.gh-cell.lv3 { background: var(--gh3); }
+.gh-cell.lv4 { background: var(--gh4); }
 .gh-grid .gh-cell:not(.empty):hover { outline: 2px solid var(--text); outline-offset: 1px; }
+
+/* Paglabas: sunod-sunod na pop-in ng mga kahon, mula kaliwa pakanan (ulit kapag nagpalit ng taon) */
+.gh-wrap:not(.in-view) .gh-grid .gh-cell { opacity: 0; }
+.gh-wrap.in-view .gh-grid .gh-cell {
+  animation: ghPop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--c, 0) * 12ms);
+}
+@keyframes ghPop {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: none; }
+}
 
 .gh-foot {
   display: flex;
@@ -1541,25 +1561,49 @@ footer { padding: 1rem 1rem 1.75rem; }
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 0.9rem;
+  margin-top: 0.75rem;
 }
-.gh-hover { font-size: 0.82rem; color: var(--muted); min-height: 1.2em; }
+.gh-hover { font-size: 0.9rem; color: var(--muted); min-height: 1.3em; font-variant-numeric: tabular-nums; }
 .gh-legend {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   color: var(--muted);
 }
-.gh-legend .gh-cell { opacity: 1; transform: none; transition: none; }
-.gh-legend span:first-child { margin-right: 0.25rem; }
-.gh-legend span:last-child { margin-left: 0.25rem; }
+.gh-legend span:first-child { margin-right: 0.3rem; }
+.gh-legend span:last-child { margin-left: 0.3rem; }
+
+/* Mga taon sa kanan */
+.gh-years {
+  flex: 0 0 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.gh-year {
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: left;
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+.gh-year:hover { color: var(--text); }
+.gh-year:active { transform: scale(0.97); }
+.gh-year.active { background: var(--text); color: var(--bg); }
+.gh-year:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* Habang naglo-load */
 .gh-skeleton {
   height: 150px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--text) 8%, transparent);
+  background: var(--gh0);
   animation: ghPulse 1.4s ease-in-out infinite;
 }
 @keyframes ghPulse {
@@ -1573,21 +1617,27 @@ footer { padding: 1rem 1rem 1.75rem; }
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
-  padding: 1.25rem 0;
+  padding: 1rem 0 0.5rem;
   text-align: center;
   color: var(--muted);
 }
-.gh-empty > i { font-size: 2rem; color: var(--text); }
 .gh-empty p { margin: 0; }
 
-@media (max-width: 600px) {
-  .gh-card { padding: 1rem; }
-  .gh-stat { padding: 0.65rem 0.7rem; }
-  .gh-stat-num { font-size: 1.25rem; }
-  .gh-stat-label { font-size: 0.7rem; }
+/* Maliit na screen: nasa itaas ang mga taon, pahalang */
+@media (max-width: 700px) {
+  .gh-card { padding: 1.1rem; }
+  .gh-body { flex-direction: column-reverse; gap: 1rem; }
+  .gh-years {
+    flex: none;
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .gh-year { padding: 0.45rem 1rem; font-size: 0.95rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gh-grid .gh-cell { opacity: 1; transform: none; transition: none; }
+  .gh-wrap.in-view .gh-grid .gh-cell { animation: none; }
   .gh-skeleton { animation: none; }
 }

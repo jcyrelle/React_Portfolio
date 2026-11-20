@@ -6,16 +6,21 @@ import useInView from '../hooks/useInView.js';
 import { githubActivity } from '../data/portfolio.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_MS = 86400000;
+const CELL = 12; // laki ng bawat kahon (px), dapat tugma sa --cell sa CSS
+const GAP = 3; // pagitan ng mga kahon (px), dapat tugma sa --gap sa CSS
+const MAX_YEARS = 5; // ilang taon ang ipapakita sa gilid
 
 const prefersReducedMotion = () =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const formatDate = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 
 // Numero na dahan-dahang tumataas hanggang sa tamang bilang
@@ -30,7 +35,7 @@ function useCountUp(target, run) {
     }
 
     const start = performance.now();
-    const duration = 1200;
+    const duration = 900;
     let frame = 0;
 
     const tick = (now) => {
@@ -47,30 +52,18 @@ function useCountUp(target, run) {
   return value;
 }
 
-// Total, pinakamahabang sunod-sunod na araw, at bilang ng araw na may contribution
-function getStats(days) {
-  let total = 0;
-  let active = 0;
-  let longest = 0;
-  let run = 0;
+// Buong taon (Jan 1 - Dec 31), hinati sa mga linggo. Linggo ang simula ng bawat hanay.
+function buildYear(year, byDate) {
+  const start = Date.UTC(year, 0, 1);
+  const end = Date.UTC(year, 11, 31);
+  const cells = Array(new Date(start).getUTCDay()).fill(null);
 
-  for (const day of days) {
-    total += day.count;
-    if (day.count > 0) {
-      active += 1;
-      run += 1;
-      if (run > longest) longest = run;
-    } else {
-      run = 0;
-    }
+  for (let t = start; t <= end; t += DAY_MS) {
+    const date = new Date(t).toISOString().slice(0, 10);
+    const found = byDate.get(date);
+    cells.push({ date, count: found ? found.count : 0, level: found ? found.level : 0 });
   }
-  return { total, active, longest };
-}
 
-// Hinahati ang mga araw sa mga linggo (Linggo ang simula ng bawat hanay)
-function getWeeks(days) {
-  const pad = new Date(`${days[0].date}T00:00:00`).getDay();
-  const cells = [...Array(pad).fill(null), ...days];
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
   return weeks;
@@ -91,7 +84,6 @@ function getMonthLabels(weeks) {
     }
   });
 
-  // Kapag kakaunti ang espasyo sa unang label, alisin para hindi magsiksikan
   if (labels.length > 1 && labels[1].w - labels[0].w < 3) labels.shift();
   return labels;
 }
@@ -100,17 +92,18 @@ export default function GitHubActivity({ index }) {
   const username = githubActivity.username;
   const profileUrl = `https://github.com/${username}`;
 
-  const [days, setDays] = useState(null);
+  const [data, setData] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [selected, setSelected] = useState(null);
   const [hover, setHover] = useState('');
   const [wrapRef, inView] = useInView();
   const scrollRef = useRef(null);
 
-  // Kunin ang contributions ng nakaraang isang taon
+  // Kunin ang contributions ng lahat ng taon
   useEffect(() => {
     if (!username) return undefined;
     let cancelled = false;
-    const cacheKey = `gh-contrib-${username}`;
+    const cacheKey = `gh-contrib-all-${username}`;
 
     let cached = null;
     try {
@@ -118,9 +111,9 @@ export default function GitHubActivity({ index }) {
     } catch {
       /* ignore */
     }
-    if (Array.isArray(cached) && cached.length > 0) setDays(cached);
+    if (Array.isArray(cached) && cached.length > 0) setData(cached);
 
-    fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`)
+    fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=all`)
       .then((res) => {
         if (!res.ok) throw new Error('bad response');
         return res.json();
@@ -130,11 +123,11 @@ export default function GitHubActivity({ index }) {
         if (!Array.isArray(json.contributions) || json.contributions.length === 0) {
           throw new Error('no data');
         }
-        setDays(json.contributions);
+        setData(json.contributions);
         try {
           sessionStorage.setItem(cacheKey, JSON.stringify(json.contributions));
         } catch {
-          /* ignore */
+          /* ignore quota errors */
         }
       })
       .catch(() => {
@@ -146,18 +139,54 @@ export default function GitHubActivity({ index }) {
     };
   }, [username]);
 
-  const stats = useMemo(() => (days ? getStats(days) : null), [days]);
-  const weeks = useMemo(() => (days ? getWeeks(days) : []), [days]);
+  const byDate = useMemo(() => {
+    const map = new Map();
+    (data || []).forEach((day) => map.set(day.date, day));
+    return map;
+  }, [data]);
+
+  // Kabuuang contributions bawat taon
+  const totals = useMemo(() => {
+    const result = {};
+    (data || []).forEach((day) => {
+      const y = day.date.slice(0, 4);
+      result[y] = (result[y] || 0) + day.count;
+    });
+    return result;
+  }, [data]);
+
+  // Mga taon na ipapakita sa gilid (pinakabago ang nasa itaas)
+  const years = useMemo(() => {
+    const current = String(new Date().getFullYear());
+    const list = Object.keys(totals).filter((y) => totals[y] > 0 || y === current);
+    if (!list.includes(current)) list.push(current);
+    return list.sort((a, b) => Number(b) - Number(a)).slice(0, MAX_YEARS).map(Number);
+  }, [totals]);
+
+  const activeYear = selected ?? years[0];
+  const weeks = useMemo(
+    () => (data && activeYear ? buildYear(activeYear, byDate) : []),
+    [data, activeYear, byDate]
+  );
   const monthLabels = useMemo(() => getMonthLabels(weeks), [weeks]);
+  const today = new Date().toISOString().slice(0, 10);
 
-  const total = useCountUp(stats ? stats.total : 0, inView && Boolean(stats));
-  const longest = useCountUp(stats ? stats.longest : 0, inView && Boolean(stats));
-  const active = useCountUp(stats ? stats.active : 0, inView && Boolean(stats));
+  const yearTotal = totals[String(activeYear)] || 0;
+  const shownTotal = useCountUp(yearTotal, inView && Boolean(data));
 
-  // Ipakita agad ang pinakabago (kanan) sa maliit na screen
+  // Sa kasalukuyang taon, ipakita ang pinakabagong linggo sa maliit na screen
   useEffect(() => {
-    if (days && scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-  }, [days]);
+    const el = scrollRef.current;
+    if (!el || !data) return;
+    if (activeYear === new Date().getFullYear()) {
+      const pad = new Date(Date.UTC(activeYear, 0, 1)).getUTCDay();
+      const dayOfYear = Math.floor((Date.now() - Date.UTC(activeYear, 0, 1)) / DAY_MS);
+      const column = Math.floor((pad + dayOfYear) / 7);
+      el.scrollLeft = Math.max(0, (column + 1) * (CELL + GAP) - el.clientWidth + 24);
+    } else {
+      el.scrollLeft = 0;
+    }
+  }, [data, activeYear]);
 
   if (!username) return null;
 
@@ -166,19 +195,27 @@ export default function GitHubActivity({ index }) {
       <Reveal as="h2">
         <i className="fa-brands fa-github fa-2xs"></i> GitHub Contributions
       </Reveal>
-      <Reveal as="p" delay={0.1} className="certs-subtitle">
-        My coding activity over the past year on{' '}
-        <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="gh-user">
-          @{username}
-        </a>
-        .
-      </Reveal>
 
-      <Reveal delay={0.2}>
+      <Reveal delay={0.15}>
         <Card className="gh-card">
+          <div className="gh-head">
+            <a className="gh-profile" href={profileUrl} target="_blank" rel="noopener noreferrer">
+              <i className="fa-brands fa-github"></i>
+              <span>{username}</span>
+            </a>
+            <a
+              className="gh-open"
+              href={profileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open GitHub profile"
+            >
+              <i className="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+          </div>
+
           {failed && (
             <div className="gh-empty">
-              <i className="fa-brands fa-github"></i>
               <p>Couldn&apos;t load the contributions right now.</p>
               <a className="cert-btn" href={profileUrl} target="_blank" rel="noopener noreferrer">
                 View my GitHub profile
@@ -186,82 +223,89 @@ export default function GitHubActivity({ index }) {
             </div>
           )}
 
-          {!failed && !days && <div className="gh-skeleton" aria-label="Loading contributions"></div>}
+          {!failed && !data && <div className="gh-skeleton" aria-label="Loading contributions"></div>}
 
-          {days && stats && (
-            <>
-              <div className="gh-stats">
-                <div className="gh-stat">
-                  <span className="gh-stat-num">{total.toLocaleString()}</span>
-                  <span className="gh-stat-label">Contributions</span>
-                </div>
-                <div className="gh-stat">
-                  <span className="gh-stat-num">{longest.toLocaleString()}</span>
-                  <span className="gh-stat-label">Longest streak (days)</span>
-                </div>
-                <div className="gh-stat">
-                  <span className="gh-stat-num">{active.toLocaleString()}</span>
-                  <span className="gh-stat-label">Active days</span>
-                </div>
-              </div>
-
-              <div ref={wrapRef} className={`gh-wrap${inView ? ' in-view' : ''}`}>
-                <div className="gh-days" aria-hidden="true">
-                  <span></span>
-                  <span>Mon</span>
-                  <span></span>
-                  <span>Wed</span>
-                  <span></span>
-                  <span>Fri</span>
-                  <span></span>
-                </div>
-
-                <div ref={scrollRef} className="gh-scroll">
-                  <div className="gh-months" aria-hidden="true">
-                    {monthLabels.map((label) => (
-                      <span key={`${label.name}-${label.w}`} style={{ '--w': label.w }}>
-                        {label.name}
-                      </span>
-                    ))}
+          {data && (
+            <div className="gh-body">
+              <div className="gh-main">
+                <div ref={wrapRef} className={`gh-wrap${inView ? ' in-view' : ''}`}>
+                  <div className="gh-days" aria-hidden="true">
+                    <span></span>
+                    <span>Mon</span>
+                    <span></span>
+                    <span>Wed</span>
+                    <span></span>
+                    <span>Fri</span>
+                    <span></span>
                   </div>
 
-                  <div className="gh-grid" role="img" aria-label={`${stats.total} contributions in the last year`}>
-                    {weeks.map((week, w) =>
-                      week.map((day, d) =>
-                        day ? (
-                          <span
-                            key={day.date}
-                            className={`gh-cell lv${day.level}`}
-                            style={{ '--c': w }}
-                            onMouseEnter={() =>
-                              setHover(
-                                `${day.count} contribution${day.count === 1 ? '' : 's'} on ${formatDate(day.date)}`
-                              )
-                            }
-                            onMouseLeave={() => setHover('')}
-                          ></span>
-                        ) : (
-                          <span key={`empty-${w}-${d}`} className="gh-cell empty"></span>
+                  <div ref={scrollRef} className="gh-scroll">
+                    <div className="gh-months" aria-hidden="true">
+                      {monthLabels.map((label) => (
+                        <span key={`${label.name}-${label.w}`} style={{ '--w': label.w }}>
+                          {label.name}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* key={activeYear}: pag nagpalit ng taon, ulit ang pop-in animation */}
+                    <div
+                      key={activeYear}
+                      className="gh-grid"
+                      role="img"
+                      aria-label={`${yearTotal} contributions in ${activeYear}`}
+                    >
+                      {weeks.map((week, w) =>
+                        week.map((day, d) =>
+                          day ? (
+                            <span
+                              key={day.date}
+                              className={`gh-cell lv${day.level}${day.date > today ? ' future' : ''}`}
+                              style={{ '--c': w }}
+                              onMouseEnter={() =>
+                                setHover(
+                                  `${day.count} contribution${day.count === 1 ? '' : 's'} on ${formatDate(day.date)}`
+                                )
+                              }
+                              onMouseLeave={() => setHover('')}
+                            ></span>
+                          ) : (
+                            <span key={`empty-${w}-${d}`} className="gh-cell empty"></span>
+                          )
                         )
-                      )
-                    )}
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="gh-foot">
+                  <span className="gh-hover">
+                    {hover || `${shownTotal.toLocaleString()} contributions in ${activeYear}`}
+                  </span>
+                  <div className="gh-legend" aria-hidden="true">
+                    <span>Less</span>
+                    {[0, 1, 2, 3, 4].map((level) => (
+                      <span key={level} className={`gh-cell lv${level}`}></span>
+                    ))}
+                    <span>More</span>
                   </div>
                 </div>
               </div>
 
-              <div className="gh-foot">
-                <span className="gh-hover">
-                  {hover || `${stats.total.toLocaleString()} contributions in the last year`}
-                </span>
-                <div className="gh-legend" aria-hidden="true">
-                  <span>Less</span>
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <span key={level} className={`gh-cell lv${level}`}></span>
-                  ))}
-                  <span>More</span>
-                </div>
+              <div className="gh-years">
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    type="button"
+                    className={`gh-year${year === activeYear ? ' active' : ''}`}
+                    aria-pressed={year === activeYear}
+                    onClick={() => setSelected(year)}
+                  >
+                    {year}
+                  </button>
+                ))}
               </div>
-            </>
+            </div>
           )}
         </Card>
       </Reveal>
