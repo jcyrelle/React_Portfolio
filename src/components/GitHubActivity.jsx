@@ -165,19 +165,24 @@ export default function GitHubActivity({ index }) {
 
   const activeYear = selected ?? years[0];
   const weeks = useMemo(
-    () => (data && activeYear ? buildYear(activeYear, byDate) : []),
-    [data, activeYear, byDate]
+    () => (activeYear ? buildYear(activeYear, byDate) : []),
+    [activeYear, byDate]
   );
   const monthLabels = useMemo(() => getMonthLabels(weeks), [weeks]);
   const today = new Date().toISOString().slice(0, 10);
 
+  const status = failed
+    ? "Couldn't load the contributions right now."
+    : !data
+    ? 'Loading contributions...'
+    : '';
   const yearTotal = totals[String(activeYear)] || 0;
   const shownTotal = useCountUp(yearTotal, inView && Boolean(data));
 
   // Sa kasalukuyang taon, ipakita ang pinakabagong linggo sa maliit na screen
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || !data) return;
+    if (!el) return;
     if (activeYear === new Date().getFullYear()) {
       const pad = new Date(Date.UTC(activeYear, 0, 1)).getUTCDay();
       const dayOfYear = Math.floor((Date.now() - Date.UTC(activeYear, 0, 1)) / DAY_MS);
@@ -214,99 +219,86 @@ export default function GitHubActivity({ index }) {
             </a>
           </div>
 
-          {failed && (
-            <div className="gh-empty">
-              <p>Couldn&apos;t load the contributions right now.</p>
-              <a className="cert-btn" href={profileUrl} target="_blank" rel="noopener noreferrer">
-                View my GitHub profile
-              </a>
-            </div>
-          )}
-
-          {!failed && !data && <div className="gh-skeleton" aria-label="Loading contributions"></div>}
-
-          {data && (
-            <div className="gh-body">
-              <div className="gh-main">
-                <div ref={wrapRef} className={`gh-wrap${inView ? ' in-view' : ''}`}>
-                  <div className="gh-days" aria-hidden="true">
-                    <span></span>
-                    <span>Mon</span>
-                    <span></span>
-                    <span>Wed</span>
-                    <span></span>
-                    <span>Fri</span>
-                    <span></span>
-                  </div>
-
-                  <div ref={scrollRef} className="gh-scroll">
-                    <div className="gh-months" aria-hidden="true">
-                      {monthLabels.map((label) => (
-                        <span key={`${label.name}-${label.w}`} style={{ '--w': label.w }}>
-                          {label.name}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* key={activeYear}: pag nagpalit ng taon, ulit ang pop-in animation */}
-                    <div
-                      key={activeYear}
-                      className="gh-grid"
-                      role="img"
-                      aria-label={`${yearTotal} contributions in ${activeYear}`}
-                    >
-                      {weeks.map((week, w) =>
-                        week.map((day, d) =>
-                          day ? (
-                            <span
-                              key={day.date}
-                              className={`gh-cell lv${day.level}${day.date > today ? ' future' : ''}`}
-                              style={{ '--c': w }}
-                              onMouseEnter={() =>
-                                setHover(
-                                  `${day.count} contribution${day.count === 1 ? '' : 's'} on ${formatDate(day.date)}`
-                                )
-                              }
-                              onMouseLeave={() => setHover('')}
-                            ></span>
-                          ) : (
-                            <span key={`empty-${w}-${d}`} className="gh-cell empty"></span>
-                          )
-                        )
-                      )}
-                    </div>
-                  </div>
+          <div className="gh-body">
+            <div className="gh-main">
+              <div ref={wrapRef} className={`gh-wrap${inView ? ' in-view' : ''}`}>
+                <div className="gh-days" aria-hidden="true">
+                  <span></span>
+                  <span>Mon</span>
+                  <span></span>
+                  <span>Wed</span>
+                  <span></span>
+                  <span>Fri</span>
+                  <span></span>
                 </div>
 
-                <div className="gh-foot">
-                  <span className="gh-hover">
-                    {hover || `${shownTotal.toLocaleString()} contributions in ${activeYear}`}
-                  </span>
-                  <div className="gh-legend" aria-hidden="true">
-                    <span>Less</span>
-                    {[0, 1, 2, 3, 4].map((level) => (
-                      <span key={level} className={`gh-cell lv${level}`}></span>
+                <div ref={scrollRef} className="gh-scroll">
+                  <div className="gh-months" aria-hidden="true">
+                    {monthLabels.map((label) => (
+                      <span key={`${label.name}-${label.w}`} style={{ '--w': label.w }}>
+                        {label.name}
+                      </span>
                     ))}
-                    <span>More</span>
+                  </div>
+
+                  {/* key={activeYear}: pag nagpalit ng taon, ulit ang pop-in animation */}
+                  <div
+                    key={activeYear}
+                    className="gh-grid"
+                    role="img"
+                    aria-label={`${yearTotal} contributions in ${activeYear}`}
+                  >
+                    {weeks.map((week, w) =>
+                      week.map((day, d) =>
+                        day ? (
+                          <span
+                            key={day.date}
+                            className={`gh-cell lv${day.level}${day.date > today ? ' future' : ''}`}
+                            style={{ '--c': w }}
+                            onMouseEnter={() =>
+                              setHover(
+                                `${day.count} contribution${day.count === 1 ? '' : 's'} on ${formatDate(day.date)}`
+                              )
+                            }
+                            onMouseLeave={() => setHover('')}
+                          ></span>
+                        ) : (
+                          <span key={`empty-${w}-${d}`} className="gh-cell empty"></span>
+                        )
+                      )
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="gh-years">
-                {years.map((year) => (
-                  <button
-                    key={year}
-                    type="button"
-                    className={`gh-year${year === activeYear ? ' active' : ''}`}
-                    aria-pressed={year === activeYear}
-                    onClick={() => setSelected(year)}
-                  >
-                    {year}
-                  </button>
-                ))}
+              <div className="gh-foot">
+                <span className="gh-hover">
+                  {hover || status || `${shownTotal.toLocaleString()} contributions in ${activeYear}`}
+                </span>
+                <div className="gh-legend" aria-hidden="true">
+                  <span>Less</span>
+                  {[0, 1, 2, 3, 4].map((level) => (
+                    <span key={level} className={`gh-cell lv${level}`}></span>
+                  ))}
+                  <span>More</span>
+                </div>
               </div>
             </div>
-          )}
+
+            <div className="gh-years">
+              {years.map((year) => (
+                <button
+                  key={year}
+                  type="button"
+                  className={`gh-year${year === activeYear ? ' active' : ''}`}
+                  aria-pressed={year === activeYear}
+                  onClick={() => setSelected(year)}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          </div>
         </Card>
       </Reveal>
     </FadeUp>
